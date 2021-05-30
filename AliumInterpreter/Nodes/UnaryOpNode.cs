@@ -11,7 +11,7 @@ namespace AliumInterpreter.Nodes
 
         public UnaryOpNode(Token token, ASTNode expr)
         {
-            nodeId = 2;
+            type = ASTNodeType.UnaryOpNode;
             this.token = token;
             this.expr = expr;
         }

@@ -17,26 +17,26 @@ namespace AliumInterpreter
             currentChar = source[0];
         }
 
-        private void Advance()
+        private void Advance(int amt = 1)
         {
-            readPos++;
+            readPos += amt;
             if (source.Length > readPos)
                 currentChar = source[readPos];
             else
                 eof = true;
         }
 
-        private char Peek()
+        private char Peek(int depth = 1)
         {
-            int peekPos = readPos + 1;
+            int peekPos = readPos + depth;
             if (peekPos > source.Length - 1)
                 return ' ';
             else return source[peekPos];
         }
 
-        private bool PeekIsEof()
+        private bool PeekIsEof(int depth = 1)
         {
-            return readPos + 1 > source.Length - 1;
+            return readPos + depth > source.Length - 1;
         }
 
         private void SkipWhitespace()
@@ -47,15 +47,34 @@ namespace AliumInterpreter
             }
         }
 
-        private int ReadNumeric()
+        private Token ReadNumeric()
         {
             string result = "";
-            while (char.IsDigit(currentChar) && !eof)
+            bool isDecimal = false;
+            while ((char.IsDigit(currentChar) || (currentChar == '.' && !isDecimal)) && !eof)
+            {
+                if (currentChar == '.') isDecimal = true;
+                result += currentChar;
+                Advance();
+            }
+            if (isDecimal)
+                return new Token(TokenType.Float, (int)float.Parse(result));
+            return new Token(TokenType.Int, int.Parse(result));
+        }
+
+        private Token ReadIdentifier()
+        {
+            string result = "";
+            while (char.IsLetterOrDigit(currentChar) && !eof)
             {
                 result += currentChar;
                 Advance();
             }
-            return int.Parse(result);
+            return result switch
+            {
+                "int" => new Token(TokenType.Keyword, result),
+                _ => throw new Exception("Unrecognized keyword: " + result),
+            };
         }
 
         public Token GetNextToken()
@@ -67,33 +86,37 @@ namespace AliumInterpreter
                     SkipWhitespace();
                     continue;
                 }
-                if (char.IsDigit(currentChar))
-                    return new Token(0, ReadNumeric());
-                switch (currentChar)
+                else if (char.IsLetter(currentChar))
+                    return ReadIdentifier();
+                else if (char.IsDigit(currentChar))
+                    return ReadNumeric();
+                else if (currentChar == '+' && Peek() == '=')
                 {
-                    case '+':
-                        Advance();
-                        return new Token(1, 0);
-                    case '-':
-                        Advance();
-                        return new Token(2, 0);
-                    case '*':
-                        Advance();
-                        return new Token(3, 0);
-                    case '/':
-                        Advance();
-                        return new Token(4, 0);
-                    case '(':
-                        Advance();
-                        return new Token(5, 0);
-                    case ')':
-                        Advance();
-                        return new Token(6, 0);
-                    default:
-                        throw new Exception("Unrecognized character: " + currentChar);
+                    Advance(2);
+                    return new Token(TokenType.PlusEquals, null);
+                }
+                else
+                {
+                    char c = currentChar;
+                    Advance();
+                    return c switch
+                    {
+                        '+' => new Token(TokenType.Plus, null),
+                        '-' => new Token(TokenType.Minus, null),
+                        '*' => new Token(TokenType.Mul, null),
+                        '/' => new Token(TokenType.Div, null),
+                        '(' => new Token(TokenType.OpenParen, null),
+                        ')' => new Token(TokenType.CloseParen, null),
+                        '{' => new Token(TokenType.OpenBrace, null),
+                        '}' => new Token(TokenType.CloseBrace, null),
+                        ';' => new Token(TokenType.Semi, null),
+                        '.' => new Token(TokenType.Dot, null),
+                        '=' => new Token(TokenType.Equals, null),
+                        _ => throw new Exception("Unrecognized character: " + c),
+                    };
                 }
             }
-            return new Token(-1, 0);
+            return new Token(TokenType.Eof, null);
         }
     }
 }

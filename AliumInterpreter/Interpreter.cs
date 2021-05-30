@@ -16,9 +16,9 @@ namespace AliumInterpreter
             currentToken = lexer.GetNextToken();
         }
 
-        private void Eat(int tokenId)
+        private void Eat(TokenType type)
         {
-            if (currentToken.id == tokenId)
+            if (currentToken.type == type)
                 currentToken = lexer.GetNextToken();
             else
                 throw new Exception("Invalid syntax");
@@ -27,26 +27,26 @@ namespace AliumInterpreter
         private ASTNode Factor()
         {
             Token token = currentToken;
-            if (token.id == 1)
+            if (token.type == TokenType.Plus)
             {
-                Eat(1);
+                Eat(TokenType.Plus);
                 return new UnaryOpNode(token, Factor());
             }
-            else if (token.id == 2)
+            else if (token.type == TokenType.Minus)
             {
-                Eat(2);
+                Eat(TokenType.Minus);
                 return new UnaryOpNode(token, Factor());
             }
-            else if (token.id == 0)
+            else if (token.type == TokenType.Int)
             {
-                Eat(0);
+                Eat(TokenType.Int);
                 return new NumLeafNode(token);
             }
-            else if (token.id == 5)
+            else if (token.type == TokenType.OpenParen)
             {
-                Eat(5);
+                Eat(TokenType.OpenParen);
                 ASTNode node = Expr();
-                Eat(6);
+                Eat(TokenType.CloseParen);
                 return node;
             }
             else
@@ -58,16 +58,16 @@ namespace AliumInterpreter
         private ASTNode Term()
         {
             ASTNode node = Factor();
-            while (currentToken.id == 3 || currentToken.id == 4)
+            while (currentToken.type == TokenType.Mul || currentToken.type == TokenType.Div)
             {
                 Token token = currentToken;
-                if (token.id == 3)
+                if (token.type == TokenType.Mul)
                 {
-                    Eat(3);
+                    Eat(TokenType.Mul);
                 }
-                else if (token.id == 4)
+                else if (token.type == TokenType.Div)
                 {
-                    Eat(4);
+                    Eat(TokenType.Div);
                 }
                 node = new BinOpNode(node, token, Factor());
             }
@@ -77,75 +77,140 @@ namespace AliumInterpreter
         public ASTNode Expr()
         {
             ASTNode node = Term();
-            while (currentToken.id == 1 || currentToken.id == 2)
+            while (currentToken.type == TokenType.Plus || currentToken.type == TokenType.Minus)
             {
                 Token token = currentToken;
-                if (token.id == 1)
+                if (token.type == TokenType.Plus)
                 {
-                    Eat(1);
+                    Eat(TokenType.Plus);
                 }
-                else if (token.id == 2)
+                else if (token.type == TokenType.Minus)
                 {
-                    Eat(2);
+                    Eat(TokenType.Minus);
                 }
                 node = new BinOpNode(node, token, Term());
             }
             return node;
         }
 
+        private ASTNode Empty()
+        {
+            return new NoOpNode();
+        }
+
+        private ASTNode Variable()
+        {
+            ASTNode node = new VarNode(currentToken);
+            Eat(TokenType.Keyword);
+            return node;
+        }
+
+        private ASTNode AssignmentStatement()
+        {
+            ASTNode left = Variable();
+            Token token = currentToken;
+            Eat(TokenType.Equals);
+            ASTNode right = Expr();
+            ASTNode node = new AssignNode(left, token, right);
+            return node;
+        }
+
+        private ASTNode Statement()
+        {
+            ASTNode node;
+            if (currentToken.type == TokenType.OpenBrace)
+                node = CompoundStatement();
+            else if (currentToken.type == TokenType.Keyword)
+                node = AssignmentStatement();
+            else
+                node = Empty();
+            return node;
+        }
+
+        private List<ASTNode> StatementList()
+        {
+            ASTNode node = Statement();
+            List<ASTNode> statements = new List<ASTNode>();
+            statements.Add(node);
+            while(currentToken.type == TokenType.Semi)
+            {
+                Eat(TokenType.Semi);
+                statements.Add(Statement());
+            }
+            if (currentToken.type == TokenType.Keyword)
+                throw new Exception("Found unexpected keyword: " + ((string)currentToken.value));
+            return statements;
+        }
+
+        private ASTNode CompoundStatement()
+        {
+            Eat(TokenType.OpenBrace);
+            List<ASTNode> nodes = StatementList();
+            Eat(TokenType.CloseBrace);
+            ASTNode root = new CompoundNode(nodes);
+            return root;
+        }
+
+        public ASTNode Program()
+        {
+            ASTNode node = CompoundStatement();
+            return node;
+        }
+
         public int Visit(ASTNode node)
         {
-            switch (node.nodeId)
+            switch (node.type)
             {
-                case 0:
+                case ASTNodeType.NumLeafNode:
                     return VisitNumLeafNode((NumLeafNode)node);
-                case 1:
+                case ASTNodeType.BinOpNode:
                     return VisitBinOpNode((BinOpNode)node);
-                case 2:
+                case ASTNodeType.UnaryOpNode:
                     return VisitUnaryOpNode((UnaryOpNode)node);
                 default:
-                    throw new Exception("Unknown node, cannot visit, id: " + node.nodeId);
+                    throw new Exception("Unknown node, cannot visit, id: " + node.type.ToString());
             }
         }
 
         public int VisitNumLeafNode(NumLeafNode numLeaf)
         {
-            return numLeaf.token.value;
+            return (int)numLeaf.token.value;
         }
 
         public int VisitBinOpNode(BinOpNode binOpNode)
         {
-            switch (binOpNode.token.id)
+            switch (binOpNode.token.type)
             {
-                case 1:
+                case TokenType.Plus:
                     return Visit(binOpNode.left) + Visit(binOpNode.right);
-                case 2:
+                case TokenType.Minus:
                     return Visit(binOpNode.left) - Visit(binOpNode.right);
-                case 3:
+                case TokenType.Mul:
                     return Visit(binOpNode.left) * Visit(binOpNode.right);
-                case 4:
+                case TokenType.Div:
                     return Visit(binOpNode.left) / Visit(binOpNode.right);
                 default:
-                    throw new Exception("Unknown token id in binary op: " + binOpNode.token.id);
+                    throw new Exception("Unknown token id in binary op: " + binOpNode.token.type.ToString());
             }
         }
 
         public int VisitUnaryOpNode(UnaryOpNode unaryOpNode)
         {
-            switch (unaryOpNode.token.id)
+            switch (unaryOpNode.token.type)
             {
-                case 1:
+                case TokenType.Plus:
                     return +Visit(unaryOpNode.expr);
-                case 2:
+                case TokenType.Minus:
                     return -Visit(unaryOpNode.expr);
                 default:
-                    throw new Exception("Unknown token id in unary op: " + unaryOpNode.token.id);
+                    throw new Exception("Unknown token id in unary op: " + unaryOpNode.token.type.ToString());
             }
         }
 
         public int Interpret()
         {
-            return Visit(Expr());
+            ASTNode expr = Expr();
+            return Visit(expr);
         }
     }
 }
