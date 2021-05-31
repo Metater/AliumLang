@@ -8,153 +8,12 @@ namespace AliumInterpreter
     public class Interpreter
     {
         private Lexer lexer;
-        private Token currentToken;
+        private Parser parser;
 
         public Interpreter(string source)
         {
             lexer = new Lexer(source);
-            currentToken = lexer.GetNextToken();
-        }
-
-        private void Eat(TokenType type)
-        {
-            if (currentToken.type == type)
-                currentToken = lexer.GetNextToken();
-            else
-                throw new Exception("Invalid syntax");
-        }
-
-        private ASTNode Factor()
-        {
-            Token token = currentToken;
-            if (token.type == TokenType.Plus)
-            {
-                Eat(TokenType.Plus);
-                return new UnaryOpNode(token, Factor());
-            }
-            else if (token.type == TokenType.Minus)
-            {
-                Eat(TokenType.Minus);
-                return new UnaryOpNode(token, Factor());
-            }
-            else if (token.type == TokenType.Int)
-            {
-                Eat(TokenType.Int);
-                return new NumLeafNode(token);
-            }
-            else if (token.type == TokenType.OpenParen)
-            {
-                Eat(TokenType.OpenParen);
-                ASTNode node = Expr();
-                Eat(TokenType.CloseParen);
-                return node;
-            }
-            else
-            {
-                throw new Exception("Invalid syntax");
-            }
-        }
-
-        private ASTNode Term()
-        {
-            ASTNode node = Factor();
-            while (currentToken.type == TokenType.Mul || currentToken.type == TokenType.Div)
-            {
-                Token token = currentToken;
-                if (token.type == TokenType.Mul)
-                {
-                    Eat(TokenType.Mul);
-                }
-                else if (token.type == TokenType.Div)
-                {
-                    Eat(TokenType.Div);
-                }
-                node = new BinOpNode(node, token, Factor());
-            }
-            return node;
-        }
-
-        public ASTNode Expr()
-        {
-            ASTNode node = Term();
-            while (currentToken.type == TokenType.Plus || currentToken.type == TokenType.Minus)
-            {
-                Token token = currentToken;
-                if (token.type == TokenType.Plus)
-                {
-                    Eat(TokenType.Plus);
-                }
-                else if (token.type == TokenType.Minus)
-                {
-                    Eat(TokenType.Minus);
-                }
-                node = new BinOpNode(node, token, Term());
-            }
-            return node;
-        }
-
-        private ASTNode Empty()
-        {
-            return new NoOpNode();
-        }
-
-        private ASTNode Variable()
-        {
-            ASTNode node = new VarNode(currentToken);
-            Eat(TokenType.Keyword);
-            return node;
-        }
-
-        private ASTNode AssignmentStatement()
-        {
-            ASTNode left = Variable();
-            Token token = currentToken;
-            Eat(TokenType.Equals);
-            ASTNode right = Expr();
-            ASTNode node = new AssignNode(left, token, right);
-            return node;
-        }
-
-        private ASTNode Statement()
-        {
-            ASTNode node;
-            if (currentToken.type == TokenType.OpenBrace)
-                node = CompoundStatement();
-            else if (currentToken.type == TokenType.Keyword)
-                node = AssignmentStatement();
-            else
-                node = Empty();
-            return node;
-        }
-
-        private List<ASTNode> StatementList()
-        {
-            ASTNode node = Statement();
-            List<ASTNode> statements = new List<ASTNode>();
-            statements.Add(node);
-            while(currentToken.type == TokenType.Semi)
-            {
-                Eat(TokenType.Semi);
-                statements.Add(Statement());
-            }
-            if (currentToken.type == TokenType.Keyword)
-                throw new Exception("Found unexpected keyword: " + ((string)currentToken.value));
-            return statements;
-        }
-
-        private ASTNode CompoundStatement()
-        {
-            Eat(TokenType.OpenBrace);
-            List<ASTNode> nodes = StatementList();
-            Eat(TokenType.CloseBrace);
-            ASTNode root = new CompoundNode(nodes);
-            return root;
-        }
-
-        public ASTNode Program()
-        {
-            ASTNode node = CompoundStatement();
-            return node;
+            parser = new Parser(lexer);
         }
 
         public int Visit(ASTNode node)
@@ -168,7 +27,7 @@ namespace AliumInterpreter
                 case ASTNodeType.UnaryOpNode:
                     return VisitUnaryOpNode((UnaryOpNode)node);
                 default:
-                    throw new Exception("Unknown node, cannot visit, id: " + node.type.ToString());
+                    throw new Exception("Unknown node, cannot visit node: " + node.type.ToString());
             }
         }
 
@@ -207,10 +66,15 @@ namespace AliumInterpreter
             }
         }
 
+        public void VisitCompoundNode(CompoundNode node)
+        {
+
+        }
+
         public int Interpret()
         {
-            ASTNode expr = Expr();
-            return Visit(expr);
+            ASTNode program = parser.Parse();
+            return Visit(program);
         }
     }
 }

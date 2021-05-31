@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using AliumInterpreter;
 
 namespace AliumInterpreterTest
@@ -10,7 +11,10 @@ namespace AliumInterpreterTest
         {
             Console.WriteLine("Hello World!");
 
-            string source = "1+1";
+            string[] lines = File.ReadAllLines(@"C:\Users\Connor\Desktop\testing.alium");
+            string source = "";
+            foreach (string line in lines)
+                source += line;
 
             Stopwatch s = new Stopwatch();
             s.Start();
