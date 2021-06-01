@@ -16,7 +16,7 @@ namespace AliumInterpreter
             parser = new Parser(lexer);
         }
 
-        public int Visit(ASTNode node)
+        public object Visit(ASTNode node)
         {
             switch (node.type)
             {
@@ -41,13 +41,13 @@ namespace AliumInterpreter
             switch (binOpNode.token.type)
             {
                 case TokenType.Plus:
-                    return Visit(binOpNode.left) + Visit(binOpNode.right);
+                    return (int)Visit(binOpNode.left) + (int)Visit(binOpNode.right);
                 case TokenType.Minus:
-                    return Visit(binOpNode.left) - Visit(binOpNode.right);
+                    return (int)Visit(binOpNode.left) - (int)Visit(binOpNode.right);
                 case TokenType.Mul:
-                    return Visit(binOpNode.left) * Visit(binOpNode.right);
+                    return (int)Visit(binOpNode.left) * (int)Visit(binOpNode.right);
                 case TokenType.Div:
-                    return Visit(binOpNode.left) / Visit(binOpNode.right);
+                    return (int)Visit(binOpNode.left) / (int)Visit(binOpNode.right);
                 default:
                     throw new Exception("Unknown token id in binary op: " + binOpNode.token.type.ToString());
             }
@@ -58,9 +58,9 @@ namespace AliumInterpreter
             switch (unaryOpNode.token.type)
             {
                 case TokenType.Plus:
-                    return +Visit(unaryOpNode.expr);
+                    return +(int)Visit(unaryOpNode.expr);
                 case TokenType.Minus:
-                    return -Visit(unaryOpNode.expr);
+                    return -(int)Visit(unaryOpNode.expr);
                 default:
                     throw new Exception("Unknown token id in unary op: " + unaryOpNode.token.type.ToString());
             }
@@ -68,13 +68,16 @@ namespace AliumInterpreter
 
         public void VisitCompoundNode(CompoundNode node)
         {
-
+            foreach (ASTNode child in node.statements)
+            {
+                Visit(child);
+            }
         }
 
         public int Interpret()
         {
             ASTNode program = parser.Parse();
-            return Visit(program);
+            return (int)Visit(program);
         }
     }
 }
