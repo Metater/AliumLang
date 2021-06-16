@@ -1,0 +1,15 @@
+{
+    "makefile.extensionOutputFolder": "./.vscode",
+    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+    "files.associations": {
+        "iostream": "cpp",
+        "string": "cpp",
+        "xstring": "cpp",
+        "chrono": "cpp",
+        "iterator": "cpp",
+        "xutility": "cpp",
+        "cstddef": "cpp",
+        "ostream": "cpp",
+        "xtree": "cpp"
+    }
+}
