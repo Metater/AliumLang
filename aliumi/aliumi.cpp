@@ -19,8 +19,8 @@ int main()
     }
     cout << endl;
 
-    ali a = ali("main.bali");
-    a.interpret();
+    ali a = ali("test.bali");
+    a.load();
 
 
     system("pause");

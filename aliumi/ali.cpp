@@ -16,8 +16,8 @@ void ali::load()
         char c = takechar();
         switch (c)
         {
-            case 0x00: // Method declarations
-                cout << (int)takechar() << endl;
+            case 0x00:
+                eatfuncdecl();
                 break;
             default:
                 break;
@@ -80,10 +80,23 @@ void ali::advance() { advance(1); }
 void ali::jump(long pos) { next = pos; }
 bool ali::done() { return next >= filelen; }
 
+short ali::getshort(char buf[]) { return *reinterpret_cast<long*>(buf); }
+int ali::getint(char buf[]) { return *reinterpret_cast<int*>(buf); }
+long ali::getlong(char buf[]) { return *reinterpret_cast<long*>(buf); }
 
 
-void ali::eatmethoddecl()
+
+void ali::eatfuncdecl()
 {
-
-    //if (data.find() == data.end())
+    long id = getlong(takechars(4));
+    long pos = getlong(takechars(4));
+    if (data.funcdecls.find(id) == data.funcdecls.end())
+    {
+        data.funcdecls.insert({id, pos});
+        cout << "Found func decl id: " << id;
+        cout << " pos: " << pos << endl;
+        cout << "Retrieved: " << data.funcdecls[id] << endl;
+    }
+    else
+        cout << "Duplicate func id found in declarations" << endl;
 }

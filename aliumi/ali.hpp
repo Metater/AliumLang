@@ -29,5 +29,9 @@ class ali
         void jump(long pos);
         bool done();
 
-        void eatmethoddecl();
+        short getshort(char* buf);
+        int getint(char* buf);
+        long getlong(char* buf);
+
+        void eatfuncdecl();
 };

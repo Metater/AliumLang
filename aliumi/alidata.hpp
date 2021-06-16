@@ -5,10 +5,10 @@ using namespace std;
 class alidata
 {
     public:
-        // method declarations <id, start instruction idx>
-        map<long, long> declsmethod;
+        // func declarations <id, start instruction idx>
+        map<long, long> funcdecls;
 
 
 
-        long entrypt;
+        long main;
 };
