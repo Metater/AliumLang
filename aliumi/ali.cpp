@@ -77,11 +77,12 @@ char* ali::takechars(int amt)
 }
 void ali::advance(int amt) { next += amt; }
 void ali::advance() { advance(1); }
+void ali::jump(long pos) { next = pos; }
 bool ali::done() { return next >= filelen; }
 
 
 
-void ali::eatdeclmethod()
+void ali::eatmethoddecl()
 {
 
     //if (data.find() == data.end())

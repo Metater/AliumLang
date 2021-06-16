@@ -26,7 +26,8 @@ class ali
         char* takechars(int amt);
         void advance(int amt);
         void advance();
+        void jump(long pos);
         bool done();
 
-        void eatdeclmethod();
+        void eatmethoddecl();
 };
