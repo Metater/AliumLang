@@ -19,19 +19,17 @@ class ali
         void read(string sourcePath);
 
         char getchar(long pos);
-        char* getchars(long pos, int amt);
+        void getchars(char* c, long pos, int amt);
         char nextchar();
-        char* nextchars(int amt);
+        void nextchars(char* c, int amt);
         char takechar();
-        char* takechars(int amt);
+        void takechars(char* c, int amt);
         void advance(int amt);
         void advance();
         void jump(long pos);
         bool done();
 
-        short getshort(char* buf);
-        int getint(char* buf);
-        long getlong(char* buf);
+        long takelong();
 
         void eatfuncdecl();
 };

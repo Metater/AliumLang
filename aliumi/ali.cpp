@@ -7,6 +7,10 @@ ali::ali(string sourcePath)
 {
     read(sourcePath);
 
+    cout << "filelen: " << filelen << endl;
+
+
+
     next = 0;
 }
 void ali::load()
@@ -52,44 +56,52 @@ void ali::read(string sourcePath)
     rewind(fileptr);
 
     buffer = (char *)malloc(filelen * sizeof(char));
+    //buffer = new char[filelen];
     fread(buffer, filelen, 1, fileptr);
     fclose(fileptr);
 }
 
 char ali::getchar(long pos) { return buffer[pos]; }
-char* ali::getchars(long pos, int amt)
+void ali::getchars(char* c, long pos, int amt)
 {
-    char* buf = new char[amt];
-    memcpy(&buf, &buffer[pos], amt);
-    return buf;
+    memcpy(&c, &buffer[pos], amt);
 }
 char ali::nextchar() { return getchar(next); }
-char* ali::nextchars(int amt) { return getchars(next, amt); }
+void ali::nextchars(char* c, int amt) { getchars(c, next, amt); }
 char ali::takechar()
 {
     advance(1);
     return getchar(next-1);
 }
-char* ali::takechars(int amt)
+void ali::takechars(char* c, int amt)
 {
     advance(amt);
-    return getchars(next-amt, amt);
+    return getchars(c, next-amt, amt);
 }
 void ali::advance(int amt) { next += amt; }
 void ali::advance() { advance(1); }
 void ali::jump(long pos) { next = pos; }
 bool ali::done() { return next >= filelen; }
 
-short ali::getshort(char buf[]) { return *reinterpret_cast<long*>(buf); }
-int ali::getint(char buf[]) { return *reinterpret_cast<int*>(buf); }
-long ali::getlong(char buf[]) { return *reinterpret_cast<long*>(buf); }
+long ali::takelong()
+{
+    char* temp = new char[8];
+    takechars(temp, 8);
+    for (int i = 0; i < 8; i++) cout << static_cast<unsigned int>(temp[i]) << endl;
+    return *reinterpret_cast<long*>(temp);
+}
 
 
 
 void ali::eatfuncdecl()
 {
-    long id = getlong(takechars(4));
-    long pos = getlong(takechars(4));
+    //char* a;
+    //for (int i = 0; i < 8; i++) cout << static_cast<unsigned char>(a[i]) << endl;
+    cout << next << endl;
+    long id = takelong();
+    cout << next << endl;
+    long pos = takelong();
+    cout << next << endl;
     if (data.funcdecls.find(id) == data.funcdecls.end())
     {
         data.funcdecls.insert({id, pos});
