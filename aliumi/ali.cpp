@@ -88,7 +88,7 @@ long ali::takelong()
     char* temp = new char[8];
     takechars(temp, 8);
     for (int i = 0; i < 8; i++) cout << static_cast<unsigned int>(temp[i]) << endl;
-    return *reinterpret_cast<long*>(temp);
+    return *reinterpret_cast<unsigned long*>(temp);
 }
 
 
@@ -98,9 +98,9 @@ void ali::eatfuncdecl()
     //char* a;
     //for (int i = 0; i < 8; i++) cout << static_cast<unsigned char>(a[i]) << endl;
     cout << next << endl;
-    long id = takelong();
+    unsigned long id = takelong();
     cout << next << endl;
-    long pos = takelong();
+    unsigned long pos = takelong();
     cout << next << endl;
     if (data.funcdecls.find(id) == data.funcdecls.end())
     {
